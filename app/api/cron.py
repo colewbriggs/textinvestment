@@ -1,12 +1,15 @@
 """Cron endpoints for Vercel scheduled jobs."""
 
+import asyncio
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Alert, AlertFrequency, User
+from app.models import Alert, AlertFrequency, User, StocksCache
 from app.services.sms_service import get_sms_service
+from app.services.market_data import get_market_data_service
 from app.analysis.dip_detector import find_top_opportunities
+from app.analysis.defaults import STOCKS_BY_SECTOR, MAJOR_ETFS
 
 router = APIRouter(prefix="/api/cron", tags=["cron"])
 
@@ -19,13 +22,26 @@ async def run_market_scan(
     """
     Run market scan and send alerts to users.
     Called by Vercel Cron every 4 hours.
-    """
-    # In production, verify the request is from Vercel Cron
-    # by checking the Authorization header matches CRON_SECRET
 
+    1. Refresh market data for key stocks
+    2. Find opportunities
+    3. Send alerts to users
+    """
+    market_service = get_market_data_service()
     sms_service = get_sms_service()
 
-    # Get all active users with corrections-only alerts
+    # Get all tickers to monitor
+    all_tickers = []
+    for sector_stocks in STOCKS_BY_SECTOR.values():
+        all_tickers.extend(sector_stocks)
+    all_tickers.extend(MAJOR_ETFS)
+    all_tickers = list(set(all_tickers))
+
+    # Refresh stale stock data (Alpha Vantage free = 25 calls/day, so limit per run)
+    # Refresh up to 5 stocks per cron run
+    refreshed = await market_service.refresh_stale_stocks(db, all_tickers[:20], max_age_hours=24)
+
+    # Get all active users
     users = (
         db.query(User)
         .join(User.preferences)
@@ -78,4 +94,40 @@ async def run_market_scan(
 
     db.commit()
 
-    return {"status": "ok", "alerts_sent": alerts_sent, "users_checked": len(users)}
+    await market_service.close()
+
+    return {
+        "status": "ok",
+        "stocks_refreshed": len(refreshed),
+        "alerts_sent": alerts_sent,
+        "users_checked": len(users)
+    }
+
+
+@router.get("/refresh")
+async def refresh_market_data(
+    db: Session = Depends(get_db),
+):
+    """
+    Manually refresh market data for all tracked stocks.
+    Use sparingly due to API rate limits.
+    """
+    market_service = get_market_data_service()
+
+    # Get all tickers
+    all_tickers = []
+    for sector_stocks in STOCKS_BY_SECTOR.values():
+        all_tickers.extend(sector_stocks)
+    all_tickers.extend(MAJOR_ETFS)
+    all_tickers = list(set(all_tickers))
+
+    # Refresh up to 20 stocks (API limit friendly)
+    refreshed = await market_service.refresh_stale_stocks(db, all_tickers[:20], max_age_hours=1)
+
+    await market_service.close()
+
+    return {
+        "status": "ok",
+        "stocks_refreshed": len(refreshed),
+        "tickers": [s.ticker for s in refreshed]
+    }
