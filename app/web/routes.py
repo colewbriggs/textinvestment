@@ -10,8 +10,11 @@ from app.models import Alert, AlertFrequency, User, UserPreferences, Watchlist
 from app.analysis.defaults import BUFFETT_DEFAULTS, INDUSTRIES
 from app.services.sms_service import get_sms_service
 
+import os
+
 router = APIRouter()
-templates = Jinja2Templates(directory="app/web/templates")
+templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+templates = Jinja2Templates(directory=templates_dir)
 
 
 @router.get("/", response_class=HTMLResponse)

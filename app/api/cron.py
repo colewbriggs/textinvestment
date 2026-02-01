@@ -47,16 +47,17 @@ async def run_market_scan(
             continue
 
         # For corrections-only, only alert if there's a significant drop (>10%)
-        significant = [o for o in opportunities if o.drop_percent >= 0.10]
+        significant = [o for o in opportunities if o.drop_from_high >= 0.10]
 
         if not significant:
             continue
 
         # Build and send alert message
         opp = significant[0]  # Top opportunity
+        reason_text = opp.reasons[0] if opp.reasons else "Significant price drop detected"
         message = (
-            f"{opp.ticker} is down {opp.drop_percent:.0%} from its recent high.\n\n"
-            f"{opp.reason}\n\n"
+            f"{opp.ticker} is down {opp.drop_from_high:.0%} from its recent high.\n\n"
+            f"{reason_text}\n\n"
             f"Reply with questions about this or any stock."
         )
 
