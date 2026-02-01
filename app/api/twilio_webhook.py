@@ -57,6 +57,24 @@ async def health_check():
     return {"status": "ok"}
 
 
+@router.get("/debug/anthropic")
+async def debug_anthropic():
+    """Test if anthropic can be imported."""
+    try:
+        import anthropic
+        from app.config import get_settings
+        settings = get_settings()
+        has_key = bool(settings.anthropic_api_key)
+        key_preview = settings.anthropic_api_key[:10] + "..." if has_key else "NOT SET"
+        return {
+            "anthropic_imported": True,
+            "api_key_set": has_key,
+            "key_preview": key_preview
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
 @router.get("/debug/users")
 async def debug_users(db: Session = Depends(get_db)):
     """Debug endpoint to check users in database."""
