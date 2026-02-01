@@ -1,96 +1,58 @@
-"""Alpha Vantage market data integration."""
+"""Yahoo Finance market data integration."""
 
 from datetime import datetime, timedelta
 from typing import Optional
 
-import httpx
+import yfinance as yf
 from sqlalchemy.orm import Session
 
-from app.config import get_settings
 from app.models import StocksCache
-
-settings = get_settings()
-
-ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query"
 
 
 class MarketDataService:
-    """Service for fetching market data from Alpha Vantage."""
+    """Service for fetching market data from Yahoo Finance."""
 
-    def __init__(self):
-        self.api_key = settings.alpha_vantage_api_key
-        self.client = httpx.AsyncClient(timeout=30.0)
-
-    async def close(self):
-        """Close the HTTP client."""
-        await self.client.aclose()
-
-    async def get_quote(self, ticker: str) -> Optional[dict]:
-        """Get current quote for a ticker."""
-        params = {
-            "function": "GLOBAL_QUOTE",
-            "symbol": ticker,
-            "apikey": self.api_key,
-        }
+    def get_stock_data(self, ticker: str) -> Optional[dict]:
+        """Get current data for a ticker."""
         try:
-            response = await self.client.get(ALPHA_VANTAGE_BASE_URL, params=params)
-            response.raise_for_status()
-            data = response.json()
+            stock = yf.Ticker(ticker)
+            info = stock.info
 
-            if "Global Quote" not in data or not data["Global Quote"]:
-                return None
-
-            quote = data["Global Quote"]
-            return {
-                "ticker": ticker,
-                "price": float(quote.get("05. price", 0)),
-                "change": float(quote.get("09. change", 0)),
-                "change_percent": quote.get("10. change percent", "0%").replace("%", ""),
-                "volume": int(quote.get("06. volume", 0)),
-                "high": float(quote.get("03. high", 0)),
-                "low": float(quote.get("04. low", 0)),
-            }
-        except Exception:
-            return None
-
-    async def get_company_overview(self, ticker: str) -> Optional[dict]:
-        """Get company overview including fundamentals."""
-        params = {
-            "function": "OVERVIEW",
-            "symbol": ticker,
-            "apikey": self.api_key,
-        }
-        try:
-            response = await self.client.get(ALPHA_VANTAGE_BASE_URL, params=params)
-            response.raise_for_status()
-            data = response.json()
-
-            if not data or "Symbol" not in data:
+            if not info or 'currentPrice' not in info:
+                # Try fast_info for basic price data
+                fast = stock.fast_info
+                if hasattr(fast, 'last_price') and fast.last_price:
+                    return {
+                        "ticker": ticker,
+                        "price": fast.last_price,
+                        "fifty_two_week_high": getattr(fast, 'year_high', None),
+                        "fifty_two_week_low": getattr(fast, 'year_low', None),
+                    }
                 return None
 
             return {
                 "ticker": ticker,
-                "name": data.get("Name"),
-                "sector": data.get("Sector"),
-                "industry": data.get("Industry"),
-                "pe_ratio": _safe_float(data.get("PERatio")),
-                "pb_ratio": _safe_float(data.get("PriceToBookRatio")),
-                "roe": _safe_float(data.get("ReturnOnEquityTTM")),
-                "debt_to_equity": _safe_float(data.get("DebtToEquity")),
-                "profit_margin": _safe_float(data.get("ProfitMargin")),
-                "fifty_two_week_high": _safe_float(data.get("52WeekHigh")),
-                "fifty_two_week_low": _safe_float(data.get("52WeekLow")),
+                "name": info.get("shortName") or info.get("longName"),
+                "sector": info.get("sector"),
+                "industry": info.get("industry"),
+                "price": info.get("currentPrice") or info.get("regularMarketPrice"),
+                "pe_ratio": info.get("trailingPE"),
+                "pb_ratio": info.get("priceToBook"),
+                "roe": info.get("returnOnEquity"),
+                "debt_to_equity": _convert_debt_equity(info.get("debtToEquity")),
+                "profit_margin": info.get("profitMargins"),
+                "fifty_two_week_high": info.get("fiftyTwoWeekHigh"),
+                "fifty_two_week_low": info.get("fiftyTwoWeekLow"),
             }
-        except Exception:
+        except Exception as e:
+            print(f"Error fetching {ticker}: {e}")
             return None
 
-    async def update_stock_cache(self, db: Session, ticker: str) -> Optional[StocksCache]:
+    def update_stock_cache(self, db: Session, ticker: str) -> Optional[StocksCache]:
         """Fetch and cache stock data."""
-        # Get both quote and overview
-        quote = await self.get_quote(ticker)
-        overview = await self.get_company_overview(ticker)
+        data = self.get_stock_data(ticker)
 
-        if not quote and not overview:
+        if not data:
             return None
 
         # Check if stock exists in cache
@@ -100,30 +62,26 @@ class MarketDataService:
             stock = StocksCache(ticker=ticker)
             db.add(stock)
 
-        # Update with quote data
-        if quote:
-            stock.last_price = quote.get("price")
-
-        # Update with overview data
-        if overview:
-            stock.company_name = overview.get("name")
-            stock.sector = overview.get("sector")
-            stock.industry = overview.get("industry")
-            stock.pe_ratio = overview.get("pe_ratio")
-            stock.pb_ratio = overview.get("pb_ratio")
-            stock.roe = overview.get("roe")
-            stock.debt_to_equity = overview.get("debt_to_equity")
-            stock.profit_margin = overview.get("profit_margin")
-            stock.fifty_two_week_high = overview.get("fifty_two_week_high")
-            stock.fifty_two_week_low = overview.get("fifty_two_week_low")
-
+        # Update with data
+        stock.last_price = data.get("price")
+        stock.company_name = data.get("name")
+        stock.sector = data.get("sector")
+        stock.industry = data.get("industry")
+        stock.pe_ratio = data.get("pe_ratio")
+        stock.pb_ratio = data.get("pb_ratio")
+        stock.roe = data.get("roe")
+        stock.debt_to_equity = data.get("debt_to_equity")
+        stock.profit_margin = data.get("profit_margin")
+        stock.fifty_two_week_high = data.get("fifty_two_week_high")
+        stock.fifty_two_week_low = data.get("fifty_two_week_low")
         stock.last_updated = datetime.utcnow()
+
         db.commit()
         db.refresh(stock)
 
         return stock
 
-    async def refresh_stale_stocks(
+    def refresh_stale_stocks(
         self,
         db: Session,
         tickers: list[str],
@@ -137,21 +95,30 @@ class MarketDataService:
             stock = db.query(StocksCache).filter(StocksCache.ticker == ticker).first()
 
             if stock is None or stock.last_updated < cutoff:
-                result = await self.update_stock_cache(db, ticker)
+                result = self.update_stock_cache(db, ticker)
                 if result:
                     updated.append(result)
 
         return updated
 
+    def refresh_all_stocks(self, db: Session, tickers: list[str]) -> list[StocksCache]:
+        """Refresh all stocks regardless of age."""
+        updated = []
+        for ticker in tickers:
+            result = self.update_stock_cache(db, ticker)
+            if result:
+                updated.append(result)
+        return updated
 
-def _safe_float(value: Optional[str]) -> Optional[float]:
-    """Safely convert a string to float."""
-    if value is None or value == "None" or value == "-":
+
+def _convert_debt_equity(value) -> Optional[float]:
+    """Convert debt/equity from percentage to ratio if needed."""
+    if value is None:
         return None
-    try:
-        return float(value)
-    except (ValueError, TypeError):
-        return None
+    # yfinance returns D/E as percentage (e.g., 150 for 1.5 ratio)
+    if value > 10:
+        return value / 100
+    return value
 
 
 # Singleton instance

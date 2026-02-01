@@ -14,6 +14,7 @@ twilio==8.13.0
 
 # Market data
 httpx==0.26.0
+yfinance>=0.2.36
 
 # AI
 anthropic==0.43.0
