@@ -20,6 +20,10 @@ async def sms_webhook(
     from_number = From.strip()
     message = Body.strip()
 
+    # Normalize phone number - ensure it has + prefix
+    if not from_number.startswith("+"):
+        from_number = "+" + from_number
+
     # Find user
     user = db.query(User).filter(User.phone_number == from_number).first()
 
