@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from app.database import init_db
 from app.web.routes import router as web_router
 from app.api.twilio_webhook import router as api_router
-from app.services.scheduler import get_scheduler, setup_scheduler
+from app.api.cron import router as cron_router
 
 
 @asynccontextmanager
@@ -17,15 +17,9 @@ async def lifespan(app: FastAPI):
     # Startup
     init_db()
 
-    # Set up and start scheduler
-    scheduler = get_scheduler()
-    setup_scheduler()
-    scheduler.start()
-
     yield
 
-    # Shutdown
-    scheduler.shutdown()
+    # Shutdown (nothing to clean up for serverless)
 
 
 app = FastAPI(
@@ -41,6 +35,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 # Include routers
 app.include_router(web_router)
 app.include_router(api_router)
+app.include_router(cron_router)
 
 
 @app.get("/health")
