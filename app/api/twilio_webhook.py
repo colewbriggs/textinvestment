@@ -17,31 +17,38 @@ async def sms_webhook(
     db: Session = Depends(get_db),
 ):
     """Twilio webhook endpoint for incoming SMS messages."""
-    from_number = From.strip()
-    message = Body.strip()
+    try:
+        from_number = From.strip()
+        message = Body.strip()
 
-    # Normalize phone number - ensure it has + prefix
-    if not from_number.startswith("+"):
-        from_number = "+" + from_number
+        # Normalize phone number - ensure it has + prefix
+        if not from_number.startswith("+"):
+            from_number = "+" + from_number
 
-    # Find user
-    user = db.query(User).filter(User.phone_number == from_number).first()
+        # Find user
+        user = db.query(User).filter(User.phone_number == from_number).first()
 
-    if not user:
+        if not user:
+            twiml = MessagingResponse()
+            twiml.message("Hi! I don't recognize your number. Please sign up at textinvestment.com to start receiving investment alerts.")
+            return Response(content=str(twiml), media_type="application/xml")
+
+        # Try to process with AI
+        try:
+            from app.services.conversation import get_conversation_service
+            service = get_conversation_service()
+            response_text = await service.handle_message(db, user, message)
+        except Exception as ai_error:
+            response_text = f"Thanks for your message! Our AI assistant is temporarily unavailable. We'll get back to you soon."
+
         twiml = MessagingResponse()
-        twiml.message("Hi! I don't recognize your number. Please sign up at our website to start receiving investment alerts.")
+        twiml.message(response_text)
         return Response(content=str(twiml), media_type="application/xml")
 
-    # Try to process with AI, fall back to simple response on error
-    try:
-        from app.handlers.sms_handler import handle_incoming_sms
-        response_text = await handle_incoming_sms(db, from_number, message)
     except Exception as e:
-        response_text = f"Got your message! (AI temporarily unavailable: {str(e)[:100]})"
-
-    twiml = MessagingResponse()
-    twiml.message(response_text)
-    return Response(content=str(twiml), media_type="application/xml")
+        twiml = MessagingResponse()
+        twiml.message(f"Something went wrong. Please try again later.")
+        return Response(content=str(twiml), media_type="application/xml")
 
 
 @router.get("/health")
