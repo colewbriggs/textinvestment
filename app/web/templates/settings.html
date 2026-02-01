@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Investment Advisor</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-inner {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+
+        .back-link:hover {
+            color: #0f172a;
+        }
+
+        .header-title {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .main {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .section {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .section-body {
+            padding: 1rem 1.25rem;
+        }
+
+        /* Frequency options */
+        .frequency-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .frequency-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            background: #f8fafc;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .frequency-option:hover {
+            background: #f1f5f9;
+        }
+
+        .frequency-option.selected {
+            background: #fafafe;
+            border-color: #6366f1;
+        }
+
+        .frequency-option input {
+            display: none;
+        }
+
+        .frequency-option .icon {
+            font-size: 1.25rem;
+        }
+
+        .frequency-option .label {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .frequency-option .desc {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        /* Industry chips */
+        .industry-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .industry-chip {
+            padding: 0.5rem 0.875rem;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .industry-chip:hover {
+            background: #f1f5f9;
+        }
+
+        .industry-chip.selected {
+            background: #6366f1;
+            border-color: #6366f1;
+            color: #fff;
+        }
+
+        .industry-chip input {
+            display: none;
+        }
+
+        /* Toggle */
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+        }
+
+        .toggle-row:not(:last-child) {
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .toggle-label {
+            font-size: 0.9rem;
+        }
+
+        .toggle-desc {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #e2e8f0;
+            border-radius: 24px;
+            transition: 0.2s;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background: #6366f1;
+        }
+
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Account info */
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .account-info span {
+            color: #64748b;
+        }
+
+        /* Save button */
+        .save-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+            padding: 1rem 1.5rem;
+        }
+
+        .save-bar-inner {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 0.875rem;
+            font-size: 1rem;
+            font-weight: 500;
+            background: #0f172a;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .save-btn:hover {
+            background: #1e293b;
+        }
+
+        .main {
+            padding-bottom: 6rem;
+        }
+
+        /* Success toast */
+        .toast {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0f172a;
+            color: #fff;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    {% if request.query_params.get('saved') %}
+    <div class="toast">Settings saved!</div>
+    {% endif %}
+
+    <header class="header">
+        <div class="header-inner">
+            <a href="/dashboard/{{ user.id }}" class="back-link">← Back</a>
+            <span class="header-title">Settings</span>
+            <div style="width: 50px;"></div>
+        </div>
+    </header>
+
+    <form method="post" action="/settings/{{ user.id }}">
+        <main class="main">
+            <!-- Alert Frequency -->
+            <div class="section" id="frequency">
+                <div class="section-header">
+                    <h2 class="section-title">Alert Frequency</h2>
+                </div>
+                <div class="section-body">
+                    <div class="frequency-options">
+                        <label class="frequency-option {% if prefs and prefs.alert_frequency.value == 'corrections' %}selected{% endif %}">
+                            <input type="radio" name="alert_frequency" value="corrections"
+                                   {% if prefs and prefs.alert_frequency.value == 'corrections' %}checked{% endif %}>
+                            <span class="icon">📉</span>
+                            <div>
+                                <div class="label">Big corrections only</div>
+                                <div class="desc">Only when there's a significant market drop</div>
+                            </div>
+                        </label>
+
+                        <label class="frequency-option {% if prefs and prefs.alert_frequency.value == 'realtime' %}selected{% endif %}">
+                            <input type="radio" name="alert_frequency" value="realtime"
+                                   {% if prefs and prefs.alert_frequency.value == 'realtime' %}checked{% endif %}>
+                            <span class="icon">⚡</span>
+                            <div>
+                                <div class="label">Right away</div>
+                                <div class="desc">As soon as we spot something</div>
+                            </div>
+                        </label>
+
+                        <label class="frequency-option {% if not prefs or prefs.alert_frequency.value == 'daily' %}selected{% endif %}">
+                            <input type="radio" name="alert_frequency" value="daily"
+                                   {% if not prefs or prefs.alert_frequency.value == 'daily' %}checked{% endif %}>
+                            <span class="icon">☀️</span>
+                            <div>
+                                <div class="label">Once a day</div>
+                                <div class="desc">Daily summary at market close</div>
+                            </div>
+                        </label>
+
+                        <label class="frequency-option {% if prefs and prefs.alert_frequency.value == 'weekly' %}selected{% endif %}">
+                            <input type="radio" name="alert_frequency" value="weekly"
+                                   {% if prefs and prefs.alert_frequency.value == 'weekly' %}checked{% endif %}>
+                            <span class="icon">📅</span>
+                            <div>
+                                <div class="label">Once a week</div>
+                                <div class="desc">Weekend roundup</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Industries -->
+            <div class="section" id="industries">
+                <div class="section-header">
+                    <h2 class="section-title">Industries</h2>
+                </div>
+                <div class="section-body">
+                    <div class="industry-chips">
+                        {% for industry in industries %}
+                        <label class="industry-chip {% if prefs and industry in prefs.favorite_industries %}selected{% endif %}">
+                            <input type="checkbox" name="industries" value="{{ industry }}"
+                                   {% if prefs and industry in prefs.favorite_industries %}checked{% endif %}>
+                            {{ industry }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Notifications</h2>
+                </div>
+                <div class="section-body">
+                    <div class="toggle-row">
+                        <div>
+                            <div class="toggle-label">Pause alerts</div>
+                            <div class="toggle-desc">Temporarily stop all notifications</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" name="is_paused" value="true"
+                                   {% if prefs and prefs.is_paused %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Account</h2>
+                </div>
+                <div class="section-body">
+                    <div class="account-info">
+                        <div><span>Phone:</span> {{ user.phone_number }}</div>
+                        <div><span>Joined:</span> {{ user.created_at.strftime('%B %d, %Y') }}</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div class="save-bar">
+            <div class="save-bar-inner">
+                <button type="submit" class="save-btn">Save Changes</button>
+            </div>
+        </div>
+    </form>
+
+    <script>
+        // Frequency option selection
+        document.querySelectorAll('.frequency-option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                document.querySelectorAll('.frequency-option').forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+            });
+        });
+
+        // Industry chip selection
+        document.querySelectorAll('.industry-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                chip.classList.toggle('selected');
+            });
+        });
+
+        // Hide toast after 3 seconds
+        const toast = document.querySelector('.toast');
+        if (toast) {
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+    </script>
+</body>
+</html>

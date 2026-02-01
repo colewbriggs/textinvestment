@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Advisor</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #ffffff;
+            color: #1a1a1a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #6366f1;
+            background: #eef2ff;
+            border-radius: 100px;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 300;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            max-width: 500px;
+        }
+
+        h1 strong {
+            font-weight: 600;
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: #6b7280;
+            margin-bottom: 3rem;
+            max-width: 400px;
+        }
+
+        .phone-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .phone-form input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.125rem;
+            text-align: center;
+            background: #fafafa;
+            border: 2px solid #e5e5e5;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .phone-form input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: #fff;
+        }
+
+        .phone-form input::placeholder { color: #9ca3af; }
+
+        .phone-form button {
+            width: 100%;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 500;
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .phone-form button:hover {
+            background: #333;
+            transform: translateY(-1px);
+        }
+
+        .fine-print {
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        .sms-disclosure {
+            margin-top: 1.5rem;
+            margin-bottom: 4rem;
+            font-size: 0.7rem;
+            color: #9ca3af;
+            max-width: 320px;
+            line-height: 1.5;
+        }
+
+        .sms-disclosure a {
+            color: #6b7280;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+            max-width: 700px;
+        }
+
+        .feature {
+            text-align: center;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            background: #fafafa;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            margin: 0 auto 1rem;
+        }
+
+        .feature strong {
+            display: block;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature p {
+            font-size: 0.875rem;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        .error-msg {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            max-width: 320px;
+        }
+
+        .test-bypass {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px dashed #e5e5e5;
+        }
+
+        .test-bypass button {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 1px dashed #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .test-bypass button:hover {
+            background: #e5e7eb;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .features { grid-template-columns: 1fr; gap: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="badge">Text Investing</div>
+    <h1>The right info, <strong>right when you need it</strong></h1>
+    <p class="subtitle">SMS alerts when quality stocks go on sale, explained in plain English.</p>
+
+    {% if error %}
+    <div class="error-msg">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/signup" class="phone-form">
+        <input type="tel" name="phone_number" placeholder="Your phone number" required autofocus>
+        <button type="submit">Get Started</button>
+    </form>
+    <p class="fine-print">Free to try. Unsubscribe anytime.</p>
+
+    <form method="post" action="/signup" class="test-bypass">
+        <input type="hidden" name="phone_number" value="+15551234567">
+        <input type="hidden" name="skip_sms" value="1">
+        <button type="submit">Test Mode (Skip SMS)</button>
+    </form>
+
+    <p class="sms-disclosure">
+        By signing up, you agree to receive recurring automated SMS alerts.
+        Message frequency varies. Message and data rates may apply.
+        Reply STOP to unsubscribe or HELP for help.
+        <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms</a>
+    </p>
+
+    <div class="features">
+        <div class="feature">
+            <div class="feature-icon">📉</div>
+            <strong>Spot the dips</strong>
+            <p>Get notified when quality companies drop below their value</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">💬</div>
+            <strong>Learn as you go</strong>
+            <p>Every alert explains the "why" in terms anyone can understand</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🤖</div>
+            <strong>Ask questions</strong>
+            <p>Reply to any alert and our AI will help you understand</p>
+        </div>
+    </div>
+</body>
+</html>

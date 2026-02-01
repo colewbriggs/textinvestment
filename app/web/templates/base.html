@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Investment Advisor{% endblock %}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">Investment Advisor</a>
+            <div class="nav-links">
+                <a href="/signup">Sign Up</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>Investment Advisor - Learn to invest through real opportunities</p>
+            <p class="disclaimer">Not financial advice. Do your own research before investing.</p>
+        </div>
+    </footer>
+</body>
+</html>
