@@ -69,7 +69,6 @@ async def terms_page(request: Request):
 async def signup_submit(
     request: Request,
     phone_number: str = Form(...),
-    skip_sms: str = Form(None),
     db: Session = Depends(get_db),
 ):
     """Handle signup form submission."""
@@ -78,9 +77,9 @@ async def signup_submit(
     if not phone_number.startswith("+"):
         phone_number = "+1" + phone_number.replace("-", "").replace(" ", "").replace("(", "").replace(")", "")
 
-    # Check if Twilio is configured (skip check if testing)
+    # Check if Twilio is configured
     sms_service = get_sms_service()
-    if not sms_service.is_configured and not skip_sms:
+    if not sms_service.is_configured:
         return templates.TemplateResponse(
             "signup.html",
             {
@@ -92,9 +91,6 @@ async def signup_submit(
     # Check if user already exists
     existing = db.query(User).filter(User.phone_number == phone_number).first()
     if existing:
-        # In test mode, just redirect to dashboard
-        if skip_sms:
-            return RedirectResponse(url=f"/dashboard/{existing.id}", status_code=303)
         return templates.TemplateResponse(
             "signup.html",
             {
