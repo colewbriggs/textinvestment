@@ -44,6 +44,12 @@ async def signup_c(request: Request):
     return templates.TemplateResponse("signup_c.html", {"request": request})
 
 
+@router.get("/prototypes", response_class=HTMLResponse)
+async def prototypes_page(request: Request):
+    """Dashboard design prototypes."""
+    return templates.TemplateResponse("dashboard_prototypes.html", {"request": request})
+
+
 @router.get("/privacy", response_class=HTMLResponse)
 async def privacy_page(request: Request):
     """Privacy policy page."""
@@ -83,6 +89,9 @@ async def signup_submit(
     # Check if user already exists
     existing = db.query(User).filter(User.phone_number == phone_number).first()
     if existing:
+        # In test mode, just redirect to dashboard
+        if skip_sms:
+            return RedirectResponse(url=f"/dashboard/{existing.id}", status_code=303)
         return templates.TemplateResponse(
             "signup.html",
             {
@@ -113,11 +122,17 @@ async def signup_submit(
     db.add(prefs)
     db.commit()
 
+    # Set default preferences for MVP (all industries, corrections only)
+    prefs.alert_frequency = AlertFrequency.CORRECTIONS
+    prefs.favorite_industries = []  # Empty = all industries
+    user.onboarding_complete = True
+    db.commit()
+
     # Send welcome SMS
     sms_service.send_welcome(phone_number)
 
-    # Redirect to onboarding
-    return RedirectResponse(url=f"/onboarding/{user.id}", status_code=303)
+    # Go directly to dashboard
+    return RedirectResponse(url=f"/dashboard/{user.id}", status_code=303)
 
 
 @router.get("/onboarding/{user_id}", response_class=HTMLResponse)
@@ -348,3 +363,18 @@ async def dashboard_page(request: Request, user_id: int, db: Session = Depends(g
             "alerts": alerts,
         },
     )
+
+
+@router.post("/dashboard/{user_id}/toggle")
+async def toggle_monitoring(user_id: int, db: Session = Depends(get_db)):
+    """Toggle monitoring on/off."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    prefs = user.preferences
+    if prefs:
+        prefs.is_paused = not prefs.is_paused
+        db.commit()
+
+    return RedirectResponse(url=f"/dashboard/{user_id}", status_code=303)

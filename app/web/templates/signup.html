@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Investment Advisor</title>
+    <title>Text Investing</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -12,10 +12,11 @@
             background: #ffffff;
             color: #1a1a1a;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
             padding: 4rem 2rem;
             text-align: center;
         }
@@ -40,6 +41,8 @@
             line-height: 1.2;
             margin-bottom: 1.5rem;
             max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         h1 strong {
@@ -49,8 +52,11 @@
         .subtitle {
             font-size: 1.125rem;
             color: #6b7280;
-            margin-bottom: 3rem;
-            max-width: 400px;
+            margin-bottom: 2.5rem;
+            max-width: 420px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
         }
 
         .phone-form {
@@ -60,9 +66,10 @@
             gap: 1rem;
             width: 100%;
             max-width: 320px;
+            margin: 0 auto 1.5rem;
         }
 
-        .phone-form input {
+        .phone-form input[type="tel"] {
             width: 100%;
             padding: 1rem;
             font-size: 1.125rem;
@@ -73,7 +80,7 @@
             transition: all 0.2s;
         }
 
-        .phone-form input:focus {
+        .phone-form input[type="tel"]:focus {
             outline: none;
             border-color: #6366f1;
             background: #fff;
@@ -100,29 +107,34 @@
         }
 
         .fine-print {
-            margin-top: 1rem;
-            font-size: 0.8rem;
-            color: #9ca3af;
-        }
-
-        .sms-disclosure {
-            margin-top: 1.5rem;
-            margin-bottom: 4rem;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: #9ca3af;
             max-width: 320px;
-            line-height: 1.5;
+            margin: 0 auto 3rem;
+            line-height: 1.6;
         }
 
-        .sms-disclosure a {
+        .fine-print a {
             color: #6b7280;
+        }
+
+        .error-msg {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .features {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 3rem;
-            max-width: 700px;
+            gap: 2rem;
+            margin-bottom: 3rem;
         }
 
         .feature {
@@ -154,18 +166,7 @@
             line-height: 1.5;
         }
 
-        .error-msg {
-            background: #fef2f2;
-            color: #dc2626;
-            padding: 0.75rem 1rem;
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
-            max-width: 320px;
-        }
-
         .test-bypass {
-            margin-top: 2rem;
             padding-top: 2rem;
             border-top: 1px dashed #e5e5e5;
         }
@@ -173,67 +174,67 @@
         .test-bypass button {
             padding: 0.5rem 1rem;
             font-size: 0.75rem;
-            background: #f3f4f6;
-            color: #6b7280;
-            border: 1px dashed #d1d5db;
+            background: #fafafa;
+            color: #9ca3af;
+            border: 1px dashed #e5e5e5;
             border-radius: 6px;
             cursor: pointer;
         }
 
         .test-bypass button:hover {
-            background: #e5e7eb;
+            background: #f1f5f9;
+            color: #6b7280;
         }
 
         @media (max-width: 600px) {
             h1 { font-size: 2rem; }
-            .features { grid-template-columns: 1fr; gap: 2rem; }
+            .features { grid-template-columns: 1fr; gap: 1.5rem; }
         }
     </style>
 </head>
 <body>
-    <div class="badge">Text Investing</div>
-    <h1>The right info, <strong>right when you need it</strong></h1>
-    <p class="subtitle">SMS alerts when quality stocks go on sale, explained in plain English.</p>
+    <div class="container">
+        <div class="badge">Text Investing</div>
+        <h1>Get alerts when <strong>markets drop</strong></h1>
+        <p class="subtitle">We'll text you when there's a significant correction in stocks, crypto, or commodities. No spam, just opportunities.</p>
 
-    {% if error %}
-    <div class="error-msg">{{ error }}</div>
-    {% endif %}
+        {% if error %}
+        <div class="error-msg">{{ error }}</div>
+        {% endif %}
 
-    <form method="post" action="/signup" class="phone-form">
-        <input type="tel" name="phone_number" placeholder="Your phone number" required autofocus>
-        <button type="submit">Get Started</button>
-    </form>
-    <p class="fine-print">Free to try. Unsubscribe anytime.</p>
+        <form method="post" action="/signup" class="phone-form">
+            <input type="tel" name="phone_number" placeholder="Your phone number" required autofocus>
+            <button type="submit">Start Monitoring</button>
+        </form>
 
-    <form method="post" action="/signup" class="test-bypass">
-        <input type="hidden" name="phone_number" value="+15551234567">
-        <input type="hidden" name="skip_sms" value="1">
-        <button type="submit">Test Mode (Skip SMS)</button>
-    </form>
+        <p class="fine-print">
+            By signing up, you agree to receive SMS alerts. Reply STOP to unsubscribe.
+            <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
+        </p>
 
-    <p class="sms-disclosure">
-        By signing up, you agree to receive recurring automated SMS alerts.
-        Message frequency varies. Message and data rates may apply.
-        Reply STOP to unsubscribe or HELP for help.
-        <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms</a>
-    </p>
-
-    <div class="features">
-        <div class="feature">
-            <div class="feature-icon">📉</div>
-            <strong>Spot the dips</strong>
-            <p>Get notified when quality companies drop below their value</p>
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <strong>Stocks, crypto & more</strong>
+                <p>We monitor equities, coins, oil, gold, and more across the market</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔔</div>
+                <strong>Only big drops</strong>
+                <p>No daily noise — just significant corrections worth knowing about</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">💬</div>
+                <strong>Ask questions</strong>
+                <p>Reply to any alert and our AI will help you understand</p>
+            </div>
         </div>
-        <div class="feature">
-            <div class="feature-icon">💬</div>
-            <strong>Learn as you go</strong>
-            <p>Every alert explains the "why" in terms anyone can understand</p>
-        </div>
-        <div class="feature">
-            <div class="feature-icon">🤖</div>
-            <strong>Ask questions</strong>
-            <p>Reply to any alert and our AI will help you understand</p>
-        </div>
+
+        <form method="post" action="/signup" class="test-bypass">
+            <input type="hidden" name="phone_number" value="+15551234567">
+            <input type="hidden" name="skip_sms" value="1">
+            <button type="submit">Test Mode (Skip SMS)</button>
+        </form>
     </div>
 </body>
 </html>
