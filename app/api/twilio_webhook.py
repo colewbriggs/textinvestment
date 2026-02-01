@@ -44,3 +44,14 @@ async def sms_webhook(
 async def health_check():
     """Health check endpoint."""
     return {"status": "ok"}
+
+
+@router.get("/debug/users")
+async def debug_users(db: Session = Depends(get_db)):
+    """Debug endpoint to check users in database."""
+    from app.models import User
+    users = db.query(User).all()
+    return {
+        "count": len(users),
+        "users": [{"id": u.id, "phone": u.phone_number} for u in users]
+    }
