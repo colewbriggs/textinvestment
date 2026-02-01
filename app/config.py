@@ -16,8 +16,6 @@ class Settings:
     twilio_auth_token: str = os.getenv("TWILIO_AUTH_TOKEN", "")
     twilio_phone_number: str = os.getenv("TWILIO_PHONE_NUMBER", "")
 
-    # Alpha Vantage
-    alpha_vantage_api_key: str = os.getenv("ALPHA_VANTAGE_API_KEY", "")
 
     # Anthropic
     anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
