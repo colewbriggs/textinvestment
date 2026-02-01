@@ -26,9 +26,20 @@ async def sms_webhook(
 
     We respond with TwiML containing the reply message.
     """
+    from app.models import User
+
     # Normalize phone number
     from_number = From.strip()
     message = Body.strip()
+
+    # Debug: try direct lookup
+    user = db.query(User).filter(User.phone_number == from_number).first()
+    if not user:
+        # Return debug info
+        all_phones = [u.phone_number for u in db.query(User).all()]
+        twiml = MessagingResponse()
+        twiml.message(f"Debug: Looking for '{from_number}', DB has: {all_phones}")
+        return Response(content=str(twiml), media_type="application/xml")
 
     # Process the message through our handler
     response_text = await handle_incoming_sms(db, from_number, message)
