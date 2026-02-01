@@ -23,7 +23,13 @@ class Settings:
     anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
 
     # Database
-    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./investor.db")
+    @property
+    def database_url(self) -> str:
+        url = os.getenv("DATABASE_URL", "sqlite:///./investor.db")
+        # Supabase uses postgres:// but SQLAlchemy needs postgresql://
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
+        return url
 
     # Security
     secret_key: str = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
