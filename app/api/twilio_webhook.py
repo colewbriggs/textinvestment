@@ -55,3 +55,19 @@ async def debug_users(db: Session = Depends(get_db)):
         "count": len(users),
         "users": [{"id": u.id, "phone": u.phone_number} for u in users]
     }
+
+
+@router.get("/debug/lookup/{phone}")
+async def debug_lookup(phone: str, db: Session = Depends(get_db)):
+    """Debug endpoint to lookup a specific phone number."""
+    from app.models import User
+    # Try exact match
+    user = db.query(User).filter(User.phone_number == phone).first()
+    # Get all phones for comparison
+    all_phones = [u.phone_number for u in db.query(User).all()]
+    return {
+        "searched_for": phone,
+        "found": user is not None,
+        "user_id": user.id if user else None,
+        "all_phones_in_db": all_phones
+    }
