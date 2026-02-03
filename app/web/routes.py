@@ -64,16 +64,10 @@ async def signup_submit(
             },
         )
 
-    # Check if user already exists
+    # Check if user already exists - redirect to their dashboard
     existing = db.query(User).filter(User.phone_number == phone_number).first()
     if existing:
-        return templates.TemplateResponse(
-            "signup.html",
-            {
-                "request": request,
-                "error": "This phone number is already registered.",
-            },
-        )
+        return RedirectResponse(url=f"/dashboard/{existing.id}", status_code=303)
 
     # Create user
     user = User(
