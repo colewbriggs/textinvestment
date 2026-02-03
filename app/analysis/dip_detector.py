@@ -3,7 +3,13 @@
 from sqlalchemy.orm import Session
 
 from app.models import StocksCache, UserPreferences
-from app.analysis.defaults import STOCKS_BY_SECTOR, MAJOR_ETFS
+from app.analysis.defaults import (
+    STOCKS_BY_SECTOR,
+    MAJOR_ETFS,
+    COMMODITIES,
+    CRYPTO,
+    get_tickers_for_investment_types,
+)
 from app.analysis.stock_scorer import Opportunity, calculate_score, meets_criteria
 
 
@@ -16,6 +22,18 @@ def get_stocks_for_industries(db: Session, industries: list[str]) -> list[str]:
     return list(set(tickers))  # Remove duplicates
 
 
+def get_ticker_type(ticker: str) -> str:
+    """Determine the investment type of a ticker."""
+    if ticker in MAJOR_ETFS:
+        return "ETFs"
+    elif ticker in COMMODITIES:
+        return "Commodities"
+    elif ticker in CRYPTO:
+        return "Crypto"
+    else:
+        return "Stocks"
+
+
 def find_opportunities(
     db: Session,
     prefs: UserPreferences,
@@ -25,18 +43,41 @@ def find_opportunities(
     Find stocks that match user's criteria.
 
     Uses their personalized thresholds (prefilled from Buffett defaults, possibly edited).
+    Filters based on user's investment type preferences.
     """
     opportunities = []
 
-    # Get tickers to scan based on user's favorite industries
-    tickers_to_scan = get_stocks_for_industries(db, prefs.favorite_industries)
+    # Get user's selected investment types (default to all if not set)
+    investment_types = prefs.investment_types if prefs.investment_types else [
+        "Stocks", "ETFs", "Commodities", "Crypto"
+    ]
 
-    # Add ETFs if user wants them
-    if include_etfs and not prefs.prefer_stocks_over_etfs:
-        tickers_to_scan.extend(MAJOR_ETFS)
+    # Start with tickers from selected investment types
+    allowed_tickers = set(get_tickers_for_investment_types(investment_types))
+
+    # Get tickers to scan based on user's favorite industries (for stocks only)
+    if "Stocks" in investment_types:
+        if prefs.favorite_industries:
+            # Filter stocks by favorite industries
+            industry_tickers = get_stocks_for_industries(db, prefs.favorite_industries)
+            # Keep only stocks from favorite industries
+            stock_tickers = set(industry_tickers)
+            # Remove all stocks, keep only industry-filtered ones
+            all_stocks = set(get_tickers_for_investment_types(["Stocks"]))
+            allowed_tickers = (allowed_tickers - all_stocks) | stock_tickers
+
+    # Handle ETF preference (existing behavior for backward compatibility)
+    if "ETFs" in investment_types and prefs.prefer_stocks_over_etfs:
+        # ETFs will be filtered later with stricter drop threshold
+        pass
+    elif "ETFs" not in investment_types:
+        # Remove ETFs entirely
+        allowed_tickers -= set(MAJOR_ETFS)
+
+    tickers_to_scan = list(allowed_tickers)
 
     if not tickers_to_scan:
-        # If no industries selected, scan all stocks
+        # If nothing selected, scan all stocks as fallback
         tickers_to_scan = []
         for sector_stocks in STOCKS_BY_SECTOR.values():
             tickers_to_scan.extend(sector_stocks)

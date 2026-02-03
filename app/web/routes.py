@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Alert, AlertFrequency, User, UserPreferences, Watchlist
-from app.analysis.defaults import BUFFETT_DEFAULTS, INDUSTRIES
+from app.analysis.defaults import BUFFETT_DEFAULTS, INDUSTRIES, INVESTMENT_TYPES
 from app.services.sms_service import get_sms_service
 
 router = APIRouter()
@@ -83,10 +83,11 @@ async def signup_submit(
     db.add(user)
     db.flush()
 
-    # Create preferences with defaults (corrections only, all industries)
+    # Create preferences with defaults (corrections only, all industries, all investment types)
     prefs = UserPreferences(
         user_id=user.id,
         alert_frequency=AlertFrequency.CORRECTIONS,
+        investment_types=BUFFETT_DEFAULTS["investment_types"],
         favorite_industries=[],
         min_drop_threshold=BUFFETT_DEFAULTS["min_drop_threshold"],
         max_pe=BUFFETT_DEFAULTS["max_pe"],
@@ -120,6 +121,7 @@ async def settings_page(request: Request, user_id: int, db: Session = Depends(ge
             "user": user,
             "prefs": prefs,
             "industries": INDUSTRIES,
+            "investment_types": INVESTMENT_TYPES,
         },
     )
 
@@ -129,6 +131,7 @@ async def settings_submit(
     request: Request,
     user_id: int,
     alert_frequency: str = Form("daily"),
+    investment_types: list[str] = Form([]),
     industries: list[str] = Form([]),
     min_drop_threshold: float = Form(BUFFETT_DEFAULTS["min_drop_threshold"]),
     max_pe: float = Form(BUFFETT_DEFAULTS["max_pe"]),
@@ -149,6 +152,7 @@ async def settings_submit(
         db.add(prefs)
 
     prefs.alert_frequency = AlertFrequency(alert_frequency)
+    prefs.investment_types = investment_types if investment_types else INVESTMENT_TYPES
     prefs.favorite_industries = industries
     prefs.min_drop_threshold = min_drop_threshold / 100 if min_drop_threshold > 1 else min_drop_threshold
     prefs.max_pe = max_pe
