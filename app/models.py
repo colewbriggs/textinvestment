@@ -66,6 +66,11 @@ class UserPreferences(Base):
     favorite_industries: Mapped[list] = mapped_column(JSON, default=list)
     is_paused: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    # Investment types to receive alerts for (Stocks, ETFs, Commodities, Crypto)
+    investment_types: Mapped[list] = mapped_column(
+        JSON, default=lambda: ["Stocks", "ETFs", "Commodities", "Crypto"]
+    )
+
     # Value investing thresholds (Buffett defaults, user-editable)
     min_drop_threshold: Mapped[float] = mapped_column(Float, default=0.10)  # 10%
     max_pe: Mapped[float] = mapped_column(Float, default=25.0)

@@ -1,5 +1,13 @@
 """Default values for investment strategies."""
 
+# Investment types users can choose to receive alerts for
+INVESTMENT_TYPES = [
+    "Stocks",
+    "ETFs",
+    "Commodities",
+    "Crypto",
+]
+
 # Warren Buffett value investing defaults
 BUFFETT_DEFAULTS = {
     "min_drop_threshold": 0.10,  # 10% from 52-week high
@@ -8,6 +16,7 @@ BUFFETT_DEFAULTS = {
     "min_roe": 0.15,  # 15%
     "prefer_stocks_over_etfs": True,
     "etf_min_drop": 0.15,  # 15% for ETFs
+    "investment_types": ["Stocks", "ETFs", "Commodities", "Crypto"],  # All enabled by default
 }
 
 # Available industries for user selection
@@ -34,6 +43,34 @@ MAJOR_ETFS = [
     "DIA",   # Dow Jones
 ]
 
+# Commodity tickers (ETFs that track commodities)
+COMMODITIES = [
+    "GLD",   # Gold
+    "SLV",   # Silver
+    "USO",   # Oil
+    "UNG",   # Natural Gas
+    "DBA",   # Agriculture
+    "CORN",  # Corn
+    "WEAT",  # Wheat
+    "CPER",  # Copper
+    "PALL",  # Palladium
+    "PPLT",  # Platinum
+]
+
+# Crypto tickers (Yahoo Finance format)
+CRYPTO = [
+    "BTC-USD",   # Bitcoin
+    "ETH-USD",   # Ethereum
+    "SOL-USD",   # Solana
+    "XRP-USD",   # Ripple
+    "ADA-USD",   # Cardano
+    "DOGE-USD",  # Dogecoin
+    "AVAX-USD",  # Avalanche
+    "DOT-USD",   # Polkadot
+    "MATIC-USD", # Polygon
+    "LINK-USD",  # Chainlink
+]
+
 # Popular stocks by sector for scanning
 STOCKS_BY_SECTOR = {
     "Technology": ["AAPL", "MSFT", "GOOGL", "NVDA", "META", "AMZN", "CRM", "ADBE", "INTC", "AMD"],
@@ -48,3 +85,32 @@ STOCKS_BY_SECTOR = {
     "Materials": ["LIN", "APD", "SHW", "ECL", "FCX", "NEM", "NUE", "DOW", "DD", "PPG"],
     "Communication Services": ["GOOG", "META", "DIS", "NFLX", "CMCSA", "VZ", "T", "CHTR", "TMUS", "EA"],
 }
+
+
+def get_all_stocks() -> list[str]:
+    """Get all stock tickers from all sectors."""
+    tickers = []
+    for sector_stocks in STOCKS_BY_SECTOR.values():
+        tickers.extend(sector_stocks)
+    return list(set(tickers))
+
+
+def get_tickers_by_investment_type(investment_type: str) -> list[str]:
+    """Get tickers for a specific investment type."""
+    if investment_type == "Stocks":
+        return get_all_stocks()
+    elif investment_type == "ETFs":
+        return MAJOR_ETFS.copy()
+    elif investment_type == "Commodities":
+        return COMMODITIES.copy()
+    elif investment_type == "Crypto":
+        return CRYPTO.copy()
+    return []
+
+
+def get_tickers_for_investment_types(investment_types: list[str]) -> list[str]:
+    """Get all tickers for the given investment types."""
+    tickers = []
+    for inv_type in investment_types:
+        tickers.extend(get_tickers_by_investment_type(inv_type))
+    return list(set(tickers))

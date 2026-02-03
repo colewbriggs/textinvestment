@@ -124,6 +124,52 @@
             color: #64748b;
         }
 
+        /* Section description */
+        .section-desc {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Investment type chips */
+        .investment-type-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .investment-type-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1rem;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .investment-type-chip:hover {
+            background: #f1f5f9;
+        }
+
+        .investment-type-chip.selected {
+            background: #6366f1;
+            border-color: #6366f1;
+            color: #fff;
+        }
+
+        .investment-type-chip input {
+            display: none;
+        }
+
+        .investment-type-chip .chip-icon {
+            font-size: 1rem;
+        }
+
         /* Industry chips */
         .industry-chips {
             display: flex;
@@ -347,12 +393,35 @@
                 </div>
             </div>
 
+            <!-- Investment Types -->
+            <div class="section" id="investment-types">
+                <div class="section-header">
+                    <h2 class="section-title">Investment Types</h2>
+                </div>
+                <div class="section-body">
+                    <p class="section-desc">Choose which types of investments you want alerts for</p>
+                    <div class="investment-type-chips">
+                        {% for inv_type in investment_types %}
+                        <label class="investment-type-chip {% if not prefs or not prefs.investment_types or inv_type in prefs.investment_types %}selected{% endif %}">
+                            <input type="checkbox" name="investment_types" value="{{ inv_type }}"
+                                   {% if not prefs or not prefs.investment_types or inv_type in prefs.investment_types %}checked{% endif %}>
+                            <span class="chip-icon">
+                                {% if inv_type == 'Stocks' %}📈{% elif inv_type == 'ETFs' %}📊{% elif inv_type == 'Commodities' %}🪙{% elif inv_type == 'Crypto' %}₿{% endif %}
+                            </span>
+                            {{ inv_type }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
             <!-- Industries -->
             <div class="section" id="industries">
                 <div class="section-header">
                     <h2 class="section-title">Industries</h2>
                 </div>
                 <div class="section-body">
+                    <p class="section-desc">Filter stocks by industry (leave empty for all)</p>
                     <div class="industry-chips">
                         {% for industry in industries %}
                         <label class="industry-chip {% if prefs and industry in prefs.favorite_industries %}selected{% endif %}">
@@ -412,6 +481,13 @@
             opt.addEventListener('click', () => {
                 document.querySelectorAll('.frequency-option').forEach(o => o.classList.remove('selected'));
                 opt.classList.add('selected');
+            });
+        });
+
+        // Investment type chip selection
+        document.querySelectorAll('.investment-type-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                chip.classList.toggle('selected');
             });
         });
 
