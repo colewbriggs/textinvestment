@@ -229,6 +229,7 @@ async def dashboard_page(request: Request, user_id: int, db: Session = Depends(g
             "user": user,
             "prefs": prefs,
             "alerts": alerts,
+            "investment_types": INVESTMENT_TYPES,
         },
     )
 
@@ -243,6 +244,25 @@ async def toggle_monitoring(user_id: int, db: Session = Depends(get_db)):
     prefs = user.preferences
     if prefs:
         prefs.is_paused = not prefs.is_paused
+        db.commit()
+
+    return RedirectResponse(url=f"/dashboard/{user_id}", status_code=303)
+
+
+@router.post("/dashboard/{user_id}/investment-types")
+async def update_investment_types(
+    user_id: int,
+    investment_types: list[str] = Form([]),
+    db: Session = Depends(get_db),
+):
+    """Update user's investment type preferences from dashboard."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    prefs = user.preferences
+    if prefs:
+        prefs.investment_types = investment_types if investment_types else INVESTMENT_TYPES
         db.commit()
 
     return RedirectResponse(url=f"/dashboard/{user_id}", status_code=303)
