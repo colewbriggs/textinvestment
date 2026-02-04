@@ -53,7 +53,12 @@ async def signup_submit(
     if not phone_number.startswith("+"):
         phone_number = "+1" + phone_number.replace("-", "").replace(" ", "").replace("(", "").replace(")", "")
 
-    # Check if Twilio is configured
+    # Check if user already exists - redirect to their dashboard
+    existing = db.query(User).filter(User.phone_number == phone_number).first()
+    if existing:
+        return RedirectResponse(url=f"/dashboard/{existing.id}", status_code=303)
+
+    # Check if Twilio is configured (only needed for new signups)
     sms_service = get_sms_service()
     if not sms_service.is_configured:
         return templates.TemplateResponse(
@@ -63,11 +68,6 @@ async def signup_submit(
                 "error": "SMS service is not configured. Please try again later.",
             },
         )
-
-    # Check if user already exists - redirect to their dashboard
-    existing = db.query(User).filter(User.phone_number == phone_number).first()
-    if existing:
-        return RedirectResponse(url=f"/dashboard/{existing.id}", status_code=303)
 
     # Create user
     user = User(
