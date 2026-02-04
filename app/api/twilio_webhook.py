@@ -33,53 +33,19 @@ async def sms_webhook(
             twiml.message("Hi! I don't recognize your number. Please sign up at textinvestment.com to start receiving investment alerts.")
             return Response(content=str(twiml), media_type="application/xml")
 
-        # Try to process with AI
+        # Process with AI
         try:
             from app.services.conversation import get_conversation_service
             service = get_conversation_service()
             response_text = await service.handle_message(db, user, message)
-        except Exception as ai_error:
-            response_text = f"Thanks for your message! Our AI assistant is temporarily unavailable. We'll get back to you soon."
+        except Exception:
+            response_text = "Thanks for your message! Our AI assistant is temporarily unavailable. We'll get back to you soon."
 
         twiml = MessagingResponse()
         twiml.message(response_text)
         return Response(content=str(twiml), media_type="application/xml")
 
-    except Exception as e:
+    except Exception:
         twiml = MessagingResponse()
-        twiml.message(f"Something went wrong. Please try again later.")
+        twiml.message("Something went wrong. Please try again later.")
         return Response(content=str(twiml), media_type="application/xml")
-
-
-@router.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    return {"status": "ok"}
-
-
-@router.get("/debug/anthropic")
-async def debug_anthropic():
-    """Test if anthropic can be imported."""
-    try:
-        import anthropic
-        from app.config import get_settings
-        settings = get_settings()
-        has_key = bool(settings.anthropic_api_key)
-        key_preview = settings.anthropic_api_key[:10] + "..." if has_key else "NOT SET"
-        return {
-            "anthropic_imported": True,
-            "api_key_set": has_key,
-            "key_preview": key_preview
-        }
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@router.get("/debug/users")
-async def debug_users(db: Session = Depends(get_db)):
-    """Debug endpoint to check users in database."""
-    users = db.query(User).all()
-    return {
-        "count": len(users),
-        "users": [{"id": u.id, "phone": u.phone_number} for u in users]
-    }
