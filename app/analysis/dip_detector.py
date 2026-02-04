@@ -8,6 +8,7 @@ from app.analysis.defaults import (
     MAJOR_ETFS,
     COMMODITIES,
     CRYPTO,
+    BUFFETT_DEFAULTS,
     get_tickers_for_investment_types,
 )
 from app.analysis.stock_scorer import Opportunity, calculate_score, meets_criteria
@@ -86,9 +87,12 @@ def find_opportunities(
     # Query cached stock data
     stocks = db.query(StocksCache).filter(StocksCache.ticker.in_(tickers_to_scan)).all()
 
+    # Get min weekly drop threshold
+    min_weekly_drop = BUFFETT_DEFAULTS.get("min_weekly_drop", 0.05)
+
     for stock in stocks:
-        # Check if stock meets criteria
-        passes, drop = meets_criteria(stock, prefs)
+        # Check if stock meets criteria (including 5% weekly drop freshness filter)
+        passes, drop = meets_criteria(stock, prefs, min_weekly_drop)
         if not passes:
             continue
 

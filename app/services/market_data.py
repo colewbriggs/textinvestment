@@ -22,20 +22,26 @@ class MarketDataService:
                 # Try fast_info for basic price data
                 fast = stock.fast_info
                 if hasattr(fast, 'last_price') and fast.last_price:
+                    weekly_change = self._calculate_weekly_change(stock, fast.last_price)
                     return {
                         "ticker": ticker,
                         "price": fast.last_price,
+                        "weekly_change": weekly_change,
                         "fifty_two_week_high": getattr(fast, 'year_high', None),
                         "fifty_two_week_low": getattr(fast, 'year_low', None),
                     }
                 return None
+
+            current_price = info.get("currentPrice") or info.get("regularMarketPrice")
+            weekly_change = self._calculate_weekly_change(stock, current_price)
 
             return {
                 "ticker": ticker,
                 "name": info.get("shortName") or info.get("longName"),
                 "sector": info.get("sector"),
                 "industry": info.get("industry"),
-                "price": info.get("currentPrice") or info.get("regularMarketPrice"),
+                "price": current_price,
+                "weekly_change": weekly_change,
                 "pe_ratio": info.get("trailingPE"),
                 "pb_ratio": info.get("priceToBook"),
                 "roe": info.get("returnOnEquity"),
@@ -46,6 +52,23 @@ class MarketDataService:
             }
         except Exception as e:
             print(f"Error fetching {ticker}: {e}")
+            return None
+
+    def _calculate_weekly_change(self, stock: yf.Ticker, current_price: Optional[float]) -> Optional[float]:
+        """Calculate the percentage change over the past week."""
+        if not current_price:
+            return None
+        try:
+            # Get historical data for the past 10 days (to ensure we have a week of trading days)
+            hist = stock.history(period="10d")
+            if hist.empty or len(hist) < 2:
+                return None
+            # Get the closing price from ~5 trading days ago
+            week_ago_price = hist['Close'].iloc[0]
+            if week_ago_price and week_ago_price > 0:
+                return (current_price - week_ago_price) / week_ago_price
+            return None
+        except Exception:
             return None
 
     def update_stock_cache(self, db: Session, ticker: str) -> Optional[StocksCache]:
@@ -64,6 +87,7 @@ class MarketDataService:
 
         # Update with data
         stock.last_price = data.get("price")
+        stock.weekly_change = data.get("weekly_change")
         stock.company_name = data.get("name")
         stock.sector = data.get("sector")
         stock.industry = data.get("industry")

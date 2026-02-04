@@ -98,19 +98,29 @@ def calculate_score(stock: StocksCache, prefs: UserPreferences) -> tuple[float, 
     return score, reasons
 
 
-def meets_criteria(stock: StocksCache, prefs: UserPreferences) -> tuple[bool, float]:
+def meets_criteria(stock: StocksCache, prefs: UserPreferences, min_weekly_drop: float = 0.05) -> tuple[bool, float]:
     """
     Check if a stock meets the user's investment criteria.
 
     Returns (passes_filter, drop_percentage).
+
+    Criteria:
+    - Must be down min_drop_threshold (10%) from 52-week high
+    - Must have dropped min_weekly_drop (5%) in the past week (freshness filter)
+    - Must meet P/E, D/E, and ROE thresholds if data available
     """
     if not stock.last_price or not stock.fifty_two_week_high:
         return False, 0.0
 
     drop = (stock.fifty_two_week_high - stock.last_price) / stock.fifty_two_week_high
 
-    # Check minimum drop threshold
+    # Check minimum drop from 52-week high threshold
     if drop < prefs.min_drop_threshold:
+        return False, drop
+
+    # Check weekly drop (freshness filter) - must have dropped recently
+    # weekly_change is negative when price dropped, so we check if it's <= -min_weekly_drop
+    if stock.weekly_change is None or stock.weekly_change > -min_weekly_drop:
         return False, drop
 
     # Check P/E ratio (if available)

@@ -123,6 +123,7 @@ class StocksCache(Base):
     sector: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     industry: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     last_price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    weekly_change: Mapped[Optional[float]] = mapped_column(Float, nullable=True)  # % change over past week
     fifty_two_week_high: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     fifty_two_week_low: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     pe_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True)

@@ -11,11 +11,12 @@ INVESTMENT_TYPES = [
 # Warren Buffett value investing defaults
 BUFFETT_DEFAULTS = {
     "min_drop_threshold": 0.10,  # 10% from 52-week high
+    "min_weekly_drop": 0.05,  # 5% drop in past week (freshness filter)
     "max_pe": 25.0,
     "max_debt_equity": 1.5,
     "min_roe": 0.15,  # 15%
-    "prefer_stocks_over_etfs": True,
-    "etf_min_drop": 0.15,  # 15% for ETFs
+    "prefer_stocks_over_etfs": False,  # ETFs use same threshold as stocks
+    "etf_min_drop": 0.10,  # Same as stocks
     "investment_types": ["Stocks", "ETFs", "Commodities", "Crypto"],  # All enabled by default
 }
 
@@ -36,11 +37,51 @@ INDUSTRIES = [
 
 # Common ETFs to track
 MAJOR_ETFS = [
+    # Broad Market
     "SPY",   # S&P 500
     "QQQ",   # Nasdaq 100
     "VTI",   # Total Stock Market
     "IWM",   # Russell 2000
     "DIA",   # Dow Jones
+    "VOO",   # Vanguard S&P 500
+    "IVV",   # iShares S&P 500
+    "VTV",   # Vanguard Value
+    "VUG",   # Vanguard Growth
+    "MDY",   # S&P MidCap 400
+    # Sector ETFs
+    "XLK",   # Technology
+    "XLF",   # Financials
+    "XLV",   # Healthcare
+    "XLE",   # Energy
+    "XLI",   # Industrials
+    "XLY",   # Consumer Discretionary
+    "XLP",   # Consumer Staples
+    "XLU",   # Utilities
+    "XLB",   # Materials
+    "XLRE",  # Real Estate
+    "XLC",   # Communication Services
+    # Thematic / Popular
+    "ARKK",  # ARK Innovation
+    "SOXX",  # Semiconductors
+    "IBB",   # Biotech
+    "XBI",   # Biotech (equal weight)
+    "SMH",   # Semiconductors (VanEck)
+    "HACK",  # Cybersecurity
+    "ICLN",  # Clean Energy
+    "TAN",   # Solar
+    # International
+    "VEA",   # Developed Markets
+    "VWO",   # Emerging Markets
+    "EFA",   # EAFE (Europe, Australasia, Far East)
+    "EEM",   # Emerging Markets (iShares)
+    "IEMG",  # Core Emerging Markets
+    # Bonds
+    "TLT",   # 20+ Year Treasury
+    "IEF",   # 7-10 Year Treasury
+    "BND",   # Total Bond Market
+    "LQD",   # Investment Grade Corporate
+    "HYG",   # High Yield Corporate
+    "AGG",   # Core U.S. Aggregate Bond
 ]
 
 # Commodity tickers (ETFs that track commodities)
